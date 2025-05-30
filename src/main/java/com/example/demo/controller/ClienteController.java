@@ -20,7 +20,7 @@ public class ClienteController {
     @GetMapping("/novo")
     public String mostrarFormulario(Model model) {
         model.addAttribute("cliente", new Cliente());
-        return "cliente-form";
+        return "clientes/cliente_form";
     }
 
     // Processa o envio do formulário de cadastro
