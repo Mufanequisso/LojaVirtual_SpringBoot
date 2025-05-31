@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Menu do Cliente - Mercado Virtual</title>
@@ -64,7 +64,7 @@
                     <i class="fas fa-box-open"></i>
                     <h5 class="card-title">Ver Produtos</h5>
                     <p class="card-text text-muted">Explore os produtos disponíveis nas lojas.</p>
-                    <a href="/produtos" class="btn btn-primary w-100">Acessar</a>
+                    <a th:href="@{/produtos/verP}" class="btn btn-primary w-100">Acessar</a>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
                     <i class="fas fa-cart-plus"></i>
                     <h5 class="card-title">Fazer Pedido</h5>
                     <p class="card-text text-muted">Monte seu pedido com os itens desejados.</p>
-                    <a href="/pedido/novo" class="btn btn-success w-100">Comprar</a>
+                    <a th:href="@{/pedido/novo}" class="btn btn-success w-100">Comprar</a>
                 </div>
             </div>
         </div>
@@ -86,7 +86,7 @@
                     <i class="fas fa-list-alt"></i>
                     <h5 class="card-title">Pedidos Pendentes</h5>
                     <p class="card-text text-muted">Consulte o status dos seus pedidos ainda não pagos.</p>
-                    <a href="/pedidos/pendentes" class="btn btn-warning w-100 text-white">Visualizar</a>
+                    <a th:href="@{/pedidos/pendentes}" class="btn btn-warning w-100 text-white">Visualizar</a>
                 </div>
             </div>
         </div>
@@ -97,7 +97,7 @@
                     <i class="fas fa-credit-card"></i>
                     <h5 class="card-title">Pagar Pedido</h5>
                     <p class="card-text text-muted">Escolha a forma de pagamento e finalize sua compra.</p>
-                    <a href="/pagamento" class="btn btn-info w-100 text-white">Pagar</a>
+                    <a th:href="@{/pagamento}" class="btn btn-info w-100 text-white">Pagar</a>
                 </div>
             </div>
         </div>
@@ -108,7 +108,7 @@
                     <i class="fas fa-sign-out-alt"></i>
                     <h5 class="card-title">Sair</h5>
                     <p class="card-text text-muted">Encerrar a sessão com segurança.</p>
-                    <a href="/logout" class="btn btn-danger w-100">Sair</a>
+                    <a th:href="@{/logout}" class="btn btn-danger w-100">Sair</a>
                 </div>
             </div>
         </div>
