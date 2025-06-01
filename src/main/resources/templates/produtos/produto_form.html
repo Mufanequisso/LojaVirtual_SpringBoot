@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Produto - Mercado Virtual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 60px;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .card-header h4 {
+            margin: 0;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container form-container">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h4><i class="fas fa-plus-circle me-2"></i>Adicionar Novo Produto</h4>
+        </div>
+        <div class="card-body">
+            <form id="formProduto" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome do Produto</label>
+                    <input type="text" class="form-control" id="nome" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea class="form-control" id="descricao" rows="3" required></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="preco" class="form-label">Preço (MZN)</label>
+                        <input type="number" step="0.01" class="form-control" id="preco" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="quantidade" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidade" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="loja_id" class="form-label">Loja</label>
+                    <select class="form-select" id="loja_id" name="lojaId" required>
+                        <option value="">Selecione uma loja</option>
+                        <th:block th:each="loja : ${lojas}">
+                            <option th:value="${loja.id}" th:text="${loja.nome}"></option>
+                        </th:block>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="imagem" class="form-label">Imagem do Produto</label>
+                    <input class="form-control" type="file" id="imagem" accept="image/*" required>
+                    <img id="preview" class="image-preview d-none" alt="Pré-visualização da imagem">
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save me-1"></i>Salvar Produto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome para ícones -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+<script>
+    document.getElementById("imagem").addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById("preview");
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove("d-none");
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = "";
+            preview.classList.add("d-none");
+        }
+    });
+
+    document.getElementById("formProduto").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const imagemFile = document.getElementById("imagem").files[0];
+
+        if (!imagemFile) {
+            alert("Por favor, selecione uma imagem.");
+            return;
+        }
+
+        const produto = {
+            nome: document.getElementById("nome").value,
+            descricao: document.getElementById("descricao").value,
+            preco: parseFloat(document.getElementById("preco").value),
+            quantidade: parseInt(document.getElementById("quantidade").value),
+            lojaId: parseInt(document.getElementById("loja_id").value)
+        };
+
+        if (!produto.lojaId) {
+            alert("Por favor, selecione uma loja.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("produto", new Blob([JSON.stringify(produto)], { type: "application/json" }));
+        formData.append("imagem", imagemFile);
+
+        fetch("/api/produtos", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Erro ao salvar produto");
+                return response.json();
+            })
+            .then(data => {
+                alert("Produto salvo com sucesso!");
+                form.reset();
+                document.getElementById("preview").classList.add("d-none");
+            })
+            .catch(error => {
+                console.error("Erro:", error);
+                alert("Erro ao salvar produto.");
+            });
+    });
+</script>
+
+</body>
+</html>
