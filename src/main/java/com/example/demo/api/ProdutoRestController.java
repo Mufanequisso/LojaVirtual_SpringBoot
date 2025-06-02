@@ -76,7 +76,7 @@ public class ProdutoRestController {
             // Simulação do vendedor autenticado
             int vendedorId = 1;
 
-            // Agora sim: usar o repositório injetado
+            // Agora
             Loja loja = lojaRepository.findByVendedorId(produtoFormDTO.getLojaId());
             if (loja == null) {
                 return ResponseEntity.badRequest().body("Vendedor não possui loja");
