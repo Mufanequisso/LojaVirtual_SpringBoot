@@ -29,13 +29,13 @@ public class ProdutoRestController {
 
     private final ProdutoService produtoService;
     private final ProdutoRepository produtoRepository;
-    private final LojaRepository lojaRepository; // ✅ adicionar aqui
+    private final LojaRepository lojaRepository; //  adicionar aqui
 
     @Autowired
     public ProdutoRestController(
             ProdutoService produtoService,
             ProdutoRepository produtoRepository,
-            LojaRepository lojaRepository // ✅ injetar aqui
+            LojaRepository lojaRepository //  injectar aqui
     ) {
         this.produtoService = produtoService;
         this.produtoRepository = produtoRepository;
