@@ -10,12 +10,16 @@ import java.time.Instant;
 @Table(name = "pagamentos")
 public class Pagamento {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // ADICIONE ISSO!
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "pedido_id", nullable = false)
-    private Pedido pedido;
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "pedido_id", nullable = false)
+//    private Pedido pedido;
+@ManyToOne
+@JoinColumn(name = "pedido_id")
+private Pedido pedido;
 
     @Lob
     @Column(name = "metodo_pagamento", nullable = false)

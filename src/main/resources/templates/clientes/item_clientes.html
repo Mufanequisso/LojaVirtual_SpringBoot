@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Itens Desejados - Mercado Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main { flex: 1; padding: 2rem 0; }
+        #productList { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+        @media (min-width: 992px) { #productList { grid-template-columns: repeat(4, 1fr); } }
+        .product-card { background: white; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.25s ease; }
+        .product-card:hover { transform: translateY(-6px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+        .product-image { width: 100%; height: 160px; object-fit: cover; }
+        .product-content { padding: 1rem 1.2rem; flex: 1; display: flex; flex-direction: column; }
+        .product-title { font-weight: 600; font-size: 1.1rem; color: #0d6efd; }
+        .product-desc { flex: 1; font-size: 0.9rem; color: #555; margin: 0.5rem 0; }
+        .product-info { font-size: 0.85rem; color: #6c757d; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+        .product-price { font-weight: 600; color: #198754; font-size: 1.05rem; }
+        .btn-add { background-color: #dc3545; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 0.4rem; }
+        .btn-add:hover { background-color: #bb2d3b; }
+        .btn-voltar { margin: 1rem 0; }
+        footer { background: #f8f9fa; text-align: center; padding: 1rem 0; font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; }
+    </style>
+</head>
+
+<body th:attr="data-cliente-id=${clienteId}">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="#">Mercado Virtual</a>
+
+        <div class="ms-auto d-flex align-items-center">
+            <!-- Botão Lista de Desejos -->
+            <a th:href="@{/clientes/wishlist}" class="btn btn-outline-danger me-2">
+                <i class="fas fa-heart me-1"></i> Lista de Desejos
+            </a>
+
+            <!-- Form de busca -->
+            <form class="d-flex" onsubmit="filterAndRender(); return false;">
+                <input id="searchInput" class="form-control me-2" type="search" placeholder="Buscar produtos..." oninput="filterAndRender()" />
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<main class="container">
+    <div class="text-start">
+        <a th:href="@{/clientes/dashboardd}" class="btn btn-primary btn-voltar">
+            <i class="fas fa-home me-1"></i> Página Inicial
+        </a>
+    </div>
+
+    <h2 class="text-center mb-4 text-primary">Adicionar aos Itens Desejados</h2>
+
+    <div id="productList"></div>
+</main>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="wishModal" tabindex="-1" aria-labelledby="wishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Item Desejado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="wishProductId">
+                <p><strong>Produto:</strong> <span id="wishProductName"></span></p>
+                <p><strong>Loja:</strong> <span id="wishProductStore"></span></p>
+                <p><strong>Preço:</strong> MZN <span id="wishProductPrice"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveWish()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    &copy; 2025 Mercado Virtual • Todos os direitos reservados
+</footer>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let products = [];
+    const clienteId = parseInt(document.body.dataset.clienteId);
+
+    const productListEl = document.getElementById("productList");
+
+    async function carregarProdutos() {
+        try {
+            const response = await fetch("/api/produtos");
+            if (!response.ok) throw new Error("Erro ao buscar dados");
+            products = await response.json();
+            renderProducts(products);
+        } catch (error) {
+            console.error(error);
+            productListEl.innerHTML = `<p class="text-danger text-center w-100">Erro ao carregar os produtos.</p>`;
+        }
+    }
+
+    function renderProducts(filteredProducts = products) {
+        productListEl.innerHTML = "";
+        if (filteredProducts.length === 0) {
+            productListEl.innerHTML = `<p class="text-center w-100 text-muted">Nenhum produto encontrado.</p>`;
+            return;
+        }
+        filteredProducts.forEach((p) => {
+            const cleanImage = p.imagem?.replace(/^\/?uploads\//, '') || 'no_image.png';
+            const imageUrl = `/uploads/${cleanImage}`;
+            const card = document.createElement("div");
+            card.className = "product-card";
+            card.innerHTML = `
+        <img src="${imageUrl}" alt="${p.nome}" class="product-image" />
+        <div class="product-content">
+          <h3 class="product-title">${p.nome}</h3>
+          <p class="product-desc">${p.descricao || 'Sem descrição'}</p>
+          <p class="product-info">
+            Loja: <strong>${p.lojaNome || 'Desconhecida'}</strong><br/>
+            Vendedor: <strong>${p.vendedorNome || 'Desconhecido'}</strong>
+          </p>
+          <div class="product-footer">
+            <span class="product-price">MZN ${parseFloat(p.preco).toFixed(2)}</span>
+            <button class="btn btn-add" onclick="openWishModal(${p.id})">
+              <i class="fas fa-heart me-1"></i>Adicionar
+            </button>
+          </div>
+        </div>
+      `;
+            productListEl.appendChild(card);
+        });
+    }
+
+    function filterAndRender() {
+        const term = document.getElementById("searchInput").value.toLowerCase();
+        const filtered = products.filter(p =>
+            p.nome.toLowerCase().includes(term) ||
+            (p.lojaNome || "").toLowerCase().includes(term) ||
+            (p.vendedorNome || "").toLowerCase().includes(term)
+        );
+        renderProducts(filtered);
+    }
+
+    function openWishModal(id) {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+        document.getElementById("wishProductId").value = product.id;
+        document.getElementById("wishProductName").textContent = product.nome;
+        document.getElementById("wishProductStore").textContent = product.lojaNome || "N/A";
+        document.getElementById("wishProductPrice").textContent = parseFloat(product.preco).toFixed(2);
+        const modal = new bootstrap.Modal(document.getElementById("wishModal"));
+        modal.show();
+    }
+
+    async function saveWish() {
+        const productId = parseInt(document.getElementById("wishProductId").value);
+        if (!clienteId || clienteId <= 0) {
+            alert("Cliente não autenticado!");
+            return;
+        }
+        try {
+            const response = await fetch(`/api/desejos/${clienteId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ produtoId: productId })
+            });
+            if (!response.ok) throw new Error(await response.text());
+            showToast("Produto adicionado aos itens desejados!");
+            bootstrap.Modal.getInstance(document.getElementById("wishModal")).hide();
+        } catch (error) {
+            console.error(error);
+            showToast("Erro ao adicionar aos itens desejados.");
+        }
+    }
+
+    function showToast(message) {
+        const toastEl = document.getElementById('liveToast');
+        toastEl.querySelector('.toast-body').textContent = message;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    carregarProdutos();
+</script>
+
+</body>
+</html>

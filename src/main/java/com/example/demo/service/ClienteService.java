@@ -40,6 +40,11 @@ public class ClienteService {
     public Optional<Cliente> autenticar(String email, String senha) {
         return clienteRepository.findByEmailAndSenha(email, senha);
     }
+
+    public Cliente buscarPorUsername(String username) {
+        return clienteRepository.findByNome(username)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado para username: " + username));
+    }
 }
 
 

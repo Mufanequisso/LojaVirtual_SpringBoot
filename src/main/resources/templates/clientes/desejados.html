@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meus Desejos - Mercado Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            padding: 2rem 0;
+        }
+        #wishlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        @media (min-width: 992px) {
+            #wishlist {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .wish-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s ease;
+        }
+        .wish-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        .wish-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .wish-content {
+            padding: 1rem 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .wish-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #0d6efd;
+        }
+        .wish-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin: 0.5rem 0;
+        }
+        .wish-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .btn-comprar {
+            background-color: #198754;
+            color: #fff;
+            border: none;
+            padding: 0.35rem 0.8rem;
+            border-radius: 0.4rem;
+        }
+        .btn-comprar:hover {
+            background-color: #157347;
+        }
+        .btn-remover {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 0.35rem 0.8rem;
+            border-radius: 0.4rem;
+        }
+        .btn-remover:hover {
+            background-color: #bb2d3b;
+        }
+        footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+
+<body th:attr="data-cliente-id=${clienteId}">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="#">Mercado Virtual</a>
+        <a th:href="@{/clientes/dashboardd}" class="btn btn-outline-primary ms-auto">
+            <i class="fas fa-home me-1"></i> Página Inicial
+        </a>
+    </div>
+</nav>
+
+<main class="container">
+    <h2 class="mb-4 text-primary">Minha Lista de Desejos</h2>
+
+    <div id="wishlist">
+        <!-- Lista renderizada dinamicamente -->
+    </div>
+</main>
+
+<footer>
+    &copy; 2025 Mercado Virtual • Todos os direitos reservados
+</footer>
+
+<!-- Toast para feedback -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const wishlistEl = document.getElementById("wishlist");
+    const clienteId = parseInt(document.body.dataset.clienteId);
+
+    async function carregarDesejos() {
+        try {
+            const response = await fetch(`/api/desejos/${clienteId}`, { method: 'GET' });
+            if (!response.ok) throw new Error("Erro ao buscar desejos");
+            const desejos = await response.json();
+            renderWishlist(desejos);
+        } catch (error) {
+            console.error(error);
+            wishlistEl.innerHTML = `<p class="text-danger text-center w-100">Erro ao carregar desejos.</p>`;
+        }
+    }
+
+    function renderWishlist(desejos) {
+        wishlistEl.innerHTML = "";
+        if (desejos.length === 0) {
+            wishlistEl.innerHTML = `<p class="text-muted w-100 text-center">Sua lista de desejos está vazia.</p>`;
+            return;
+        }
+
+        desejos.forEach((d) => {
+            const cleanImage = d.produtoImagem ? d.produtoImagem.replace(/^\/?uploads\//, '') : null;
+            const imageUrl = cleanImage ? `/uploads/${cleanImage}` : 'no_image.png';
+
+            const card = document.createElement("div");
+            card.className = "wish-card";
+            card.innerHTML = `
+            <img src="${imageUrl}" alt="${d.produtoNome}" class="wish-image" />
+            <div class="wish-content">
+                <h3 class="wish-title">${d.produtoNome}</h3>
+                <p class="wish-info">
+                    Loja: <strong>${d.lojaNome || 'N/A'}</strong><br/>
+                    Preço: MZN ${parseFloat(d.produtoPreco).toFixed(2)}
+                </p>
+                <div class="wish-footer">
+                    <button class="btn btn-comprar" onclick="comprarAgora(${d.produtoId})">
+                        <i class="fas fa-shopping-cart me-1"></i> Comprar
+                    </button>
+                    <button class="btn btn-remover" onclick="removerDesejo(${d.produtoId})">
+                        <i class="fas fa-trash-alt me-1"></i> Remover
+                    </button>
+                </div>
+            </div>
+        `;
+            wishlistEl.appendChild(card);
+        });
+    }
+
+
+    async function removerDesejo(produtoId) {
+        try {
+            const response = await fetch(`/api/desejos/${clienteId}/${produtoId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error("Erro ao remover desejo");
+            showToast("Item removido da lista de desejos!");
+            carregarDesejos();
+        } catch (error) {
+            console.error(error);
+            showToast("Erro ao remover item!");
+        }
+    }
+
+    async function comprarAgora(produtoId) {
+        try {
+            const response = await fetch(`/api/pedidos/${clienteId}`, {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify([{ produtoId: produtoId, quantidade: 1 }])
+            });
+            if (!response.ok) throw new Error("Erro ao comprar");
+            showToast("Pedido criado com sucesso!");
+            removerDesejo(produtoId);
+        } catch (error) {
+            console.error(error);
+            showToast("Erro ao criar pedido!");
+        }
+    }
+
+    function showToast(message) {
+        const toastEl = document.getElementById('liveToast');
+        toastEl.querySelector('.toast-body').textContent = message;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    carregarDesejos();
+</script>
+
+</body>
+</html>

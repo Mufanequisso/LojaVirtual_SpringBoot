@@ -5,12 +5,14 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pedidos")
 public class Pedido {
     @Id
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -26,9 +28,13 @@ public class Pedido {
     private BigDecimal total;
 
     @ColumnDefault("'pendente'")
-    @Lob
     @Column(name = "status")
     private String status;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItensPedido> itens = new ArrayList<>();
+
+    // getters e setters
 
     public Integer getId() {
         return id;
@@ -70,4 +76,11 @@ public class Pedido {
         this.status = status;
     }
 
+    public List<ItensPedido> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItensPedido> itens) {
+        this.itens = itens;
+    }
 }

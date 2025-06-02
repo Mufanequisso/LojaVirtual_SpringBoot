@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado do Pagamento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .mensagem {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .sucesso {
+            color: green;
+        }
+        .erro {
+            color: red;
+        }
+        .btn-voltar {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+        }
+        .btn-voltar:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Mensagem de sucesso -->
+<div th:if="${sucesso}" class="mensagem sucesso">
+    ✅ <span th:text="${sucesso}"></span>
+</div>
+
+<!-- Mensagem de erro -->
+<div th:if="${erro}" class="mensagem erro">
+    ❌ <span th:text="${erro}"></span>
+</div>
+
+<!-- Botão para voltar -->
+<a th:href="@{/pagamentos/lista}" class="btn-voltar">Voltar para Pagamentos</a>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -103,6 +103,10 @@
             background-color: #0b5ed7;
         }
 
+        .btn-voltar {
+            margin: 1rem 0;
+        }
+
         footer {
             background: #f8f9fa;
             text-align: center;
@@ -113,7 +117,8 @@
         }
     </style>
 </head>
-<body>
+
+<body th:attr="data-cliente-id=${clienteId}">
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
@@ -126,6 +131,13 @@
 </nav>
 
 <main class="container">
+    <!-- Botão voltar à página inicial -->
+    <div class="text-start">
+        <a th:href="@{/clientes/dashboardd}" class="btn btn-primary btn-voltar">
+            <i class="fas fa-home me-1"></i> Página Inicial
+        </a>
+    </div>
+
     <div id="productList"></div>
 </main>
 
@@ -135,7 +147,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Adicionar Produto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
                 <form id="modalForm">
@@ -169,17 +181,25 @@
     &copy; 2025 Mercado Virtual • Todos os direitos reservados
 </footer>
 
+<!-- Toast para feedback -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let products = [];
-
     const productListEl = document.getElementById("productList");
+    const clienteId = parseInt(document.body.dataset.clienteId);
 
     async function carregarProdutos() {
         try {
             const response = await fetch("/api/produtos");
-
-
             if (!response.ok) throw new Error("Erro ao buscar dados");
             products = await response.json();
             renderProducts(products);
@@ -198,8 +218,6 @@
         filteredProducts.forEach((p) => {
             const cleanImage = p.imagem?.replace(/^\/?uploads\//, '') || 'no_image.png';
             const imageUrl = `/uploads/${cleanImage}`;
-
-            // const imageUrl = p.imagem ? `/uploads/${p.imagem}` : '/uploads/no_image.png';
             const card = document.createElement("div");
             card.className = "product-card";
             card.innerHTML = `
@@ -245,11 +263,66 @@
         modal.show();
     }
 
-    function saveProduct() {
-        const id = document.getElementById("modalProductId").value;
-        const qty = document.getElementById("modalQuantity").value;
-        alert(`Produto ID ${id} adicionado com quantidade: ${qty}`);
-        bootstrap.Modal.getInstance(document.getElementById("addProductModal")).hide();
+    async function saveProduct() {
+        const productId = parseInt(document.getElementById("modalProductId").value);
+        const quantidade = parseInt(document.getElementById("modalQuantity").value);
+
+        if (!quantidade || quantidade <= 0) {
+            alert("Informe uma quantidade válida.");
+            return;
+        }
+
+        if (!clienteId || clienteId <= 0) {
+            alert("Cliente não autenticado!");
+            return;
+        }
+
+        // Aqui verificamos a quantidade disponível:
+        const product = products.find(p => p.id === productId);
+        if (!product) {
+            alert("Produto não encontrado.");
+            return;
+        }
+
+        if (product.quantidade < quantidade) {
+            // Usar o showToast para mensagem de quantidade insuficiente:
+            showToast("Quantidade insuficiente!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/criar/${clienteId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify([
+                    {
+                        produtoId: productId,
+                        quantidade: quantidade
+                    }
+                ])
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || "Erro ao salvar pedido.");
+            }
+
+            const data = await response.json();
+            showToast("Produto adicionado com sucesso!");
+            bootstrap.Modal.getInstance(document.getElementById("addProductModal")).hide();
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao salvar: " + error.message);
+        }
+    }
+
+    function showToast(message) {
+        const toastEl = document.getElementById('liveToast');
+        toastEl.querySelector('.toast-body').textContent = message;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
     }
 
     carregarProdutos();

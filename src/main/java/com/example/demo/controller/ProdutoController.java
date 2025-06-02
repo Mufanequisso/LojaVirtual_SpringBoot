@@ -1,10 +1,13 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.Cliente;
 import com.example.demo.model.Loja;
 import com.example.demo.model.Produto;
 import com.example.demo.service.LojaService;
 import com.example.demo.service.ProdutoService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +32,34 @@ public class ProdutoController {
 //
 //        return "produtos/ver_produtos"; // Exemplo de view: src/main/resources/templates/produtos/lista.html
 //    }
+//    @GetMapping("/verP")
+//    public String verProdutos() {
+//        return "produtos/ver_produtos"; // Thymeleaf buscará o arquivo menu-cliente.html em /templates
+//    }
+
+
+
+//    @GetMapping("/verP")
+//    public String listarProdutos(Model model, @AuthenticationPrincipal Cliente cliente) {
+//        model.addAttribute("clienteId", cliente.getId());
+//        return "produtos/ver_produtos"; // nome do template HTML
+//    }
+
+
+
+
     @GetMapping("/verP")
-    public String verProdutos() {
-        return "produtos/ver_produtos"; // Thymeleaf buscará o arquivo menu-cliente.html em /templates
+    public String verProdutos(Model model, HttpSession session ) {
+        Cliente cliente = (Cliente) session.getAttribute("clienteLogado");
+        if (cliente == null) {
+            // redireciona para login, por exemplo
+            return "redirect:/clientes/login";
+        }
+        model.addAttribute("clienteId", cliente.getId());
+        return "produtos/ver_produtos"; // seu template HTML
     }
+
+
 
     @GetMapping("/novo")
     public String mostrarFormulario(Model model) {

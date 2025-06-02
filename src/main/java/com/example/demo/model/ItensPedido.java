@@ -1,38 +1,32 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "itens_pedido")
 public class ItensPedido {
+
     @Id
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 
-    @Column(name = "quantidade", nullable = false)
+    @Column(nullable = false)
     private Integer quantidade;
 
-    @Column(name = "preco_unitario", nullable = false, precision = 10, scale = 2)
-    private BigDecimal precoUnitario;
+    @Column(name = "preco_unitario", precision = 10, scale = 2, nullable = false)
+    private BigDecimal preco;
 
-    @ColumnDefault("`quantidade` * `preco_unitario`")
-    @Column(name = "subtotal", precision = 10, scale = 2)
-    private BigDecimal subtotal;
-
-    @ColumnDefault("0.00")
-    @Column(name = "comissao", precision = 10, scale = 2)
-    private BigDecimal comissao;
+    // getters e setters
 
     public Integer getId() {
         return id;
@@ -66,28 +60,11 @@ public class ItensPedido {
         this.quantidade = quantidade;
     }
 
-    public BigDecimal getPrecoUnitario() {
-        return precoUnitario;
+    public BigDecimal getPreco() {
+        return preco;
     }
 
-    public void setPrecoUnitario(BigDecimal precoUnitario) {
-        this.precoUnitario = precoUnitario;
+    public void setPreco(BigDecimal preco) {
+        this.preco = preco;
     }
-
-    public BigDecimal getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(BigDecimal subtotal) {
-        this.subtotal = subtotal;
-    }
-
-    public BigDecimal getComissao() {
-        return comissao;
-    }
-
-    public void setComissao(BigDecimal comissao) {
-        this.comissao = comissao;
-    }
-
 }
